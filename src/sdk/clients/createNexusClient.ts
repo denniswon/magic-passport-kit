@@ -142,6 +142,8 @@ export type NexusClientConfig<
     k1ValidatorAddress?: Address
     /** Account address */
     accountAddress?: Address
+    /** Trigger test mode */
+    isTest?: boolean
   }
 >
 
@@ -163,6 +165,8 @@ export type NexusClientConfig<
  *   signer: '0x...',
  * })
  */
+let _isTesting = false
+
 export async function createNexusClient(
   parameters: NexusClientConfig
 ): Promise<NexusClient> {
@@ -205,6 +209,12 @@ export async function createNexusClient(
   })
     .extend(erc7579Actions())
     .extend(smartAccountActions())
-
+  if (parameters.isTest) {
+    _isTesting = true
+  }
   return bundler_ as unknown as NexusClient
+}
+
+export function getIsTestMode() {
+  return _isTesting
 }

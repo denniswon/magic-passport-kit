@@ -8,8 +8,6 @@
   "devDependencies": {
     "@biomejs/biome": "1.6.0",
     "@changesets/cli": "^2.27.1",
-    "@commitlint/cli": "^19.4.1",
-    "@commitlint/config-conventional": "^19.4.1",
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/wallet": "^5.7.0",
@@ -72,11 +70,6 @@
       "default": "./_cjs/modules/index.js"
     }
   },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  },
   "description": "SDK for Biconomy integration with support for account abstraction, smart accounts, ERC-4337.",
   "files": [
     "dist/*",
@@ -121,8 +114,7 @@
   },
   "sideEffects": false,
   "simple-git-hooks": {
-    "pre-commit": "bun run format && bun run lint:fix",
-    "commit-msg": "npx --no -- commitlint --edit ${1}"
+    "pre-commit": "bun run format && bun run lint:fix"
   },
   "type": "module",
   "types": "./dist/_types/index.d.ts",
