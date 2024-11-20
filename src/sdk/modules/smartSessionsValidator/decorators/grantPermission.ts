@@ -216,7 +216,7 @@ export async function grantPermission<
 
   if (!account_) {
     throw new AccountNotFoundError({
-      docsPath: "/nexus/nexus-client/methods#sendtransaction"
+      docsPath: "/nexus-client/methods#sendtransaction"
     })
   }
 
@@ -290,13 +290,7 @@ export async function grantPermission<
       client,
       sendUserOperation,
       "sendUserOperation"
-    )({
-      calls,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      nonce,
-      account
-    })) as Hex
+    )({ calls, maxFeePerGas, maxPriorityFeePerGas, nonce, account })) as Hex
 
     return {
       userOpHash: userOpHash,

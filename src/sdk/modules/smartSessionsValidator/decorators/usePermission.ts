@@ -1,9 +1,10 @@
 import type { Chain, Client, Hex, Transport } from "viem"
 import { sendUserOperation } from "viem/account-abstraction"
-import { getAction, parseAccount } from "viem/utils"
-import type { NexusAccount } from "../../../account/toNexusAccount"
+import { getAction } from "viem/utils"
 import { AccountNotFoundError } from "../../../account/utils/AccountNotFound"
-import type { Execution, ModularSmartAccount } from "../../utils/Types"
+import type { Call } from "../../../account/utils/Types"
+import type { Signer } from "../../../account/utils/toSigner"
+import type { ModularSmartAccount } from "../../utils/Types"
 
 /**
  * Parameters for using a smart session to execute actions.
@@ -14,7 +15,7 @@ export type UsePermissionParameters<
   TModularSmartAccount extends ModularSmartAccount | undefined
 > = {
   /** Array of executions to perform in the session. Allows for batch transactions if the session is enabled for multiple actions. */
-  actions: Execution[]
+  calls: Call[]
   /** The maximum fee per gas unit the transaction is willing to pay. */
   maxFeePerGas?: bigint
   /** The maximum priority fee per gas unit the transaction is willing to pay. */
@@ -23,6 +24,8 @@ export type UsePermissionParameters<
   nonce?: bigint
   /** The modular smart account to use for the session. If not provided, the client's account will be used. */
   account?: TModularSmartAccount
+  /** The signer to use for the session. Defaults to the signer of the client. */
+  signer?: Signer
 }
 
 /**
@@ -41,11 +44,10 @@ export type UsePermissionParameters<
  * @example
  * ```typescript
  * const result = await usePermission(nexusClient, {
- *   actions: [
+ *   calls: [
  *     {
- *       target: '0x1234...',
- *       value: 0n,
- *       callData: '0xabcdef...'
+ *       to: '0x1234...',
+ *       data: '0xabcdef...'
  *     }
  *   ],
  *   maxFeePerGas: 1000000000n
@@ -64,35 +66,18 @@ export async function usePermission<
   client: Client<Transport, Chain | undefined, TModularSmartAccount>,
   parameters: UsePermissionParameters<TModularSmartAccount>
 ): Promise<Hex> {
-  const {
-    account: account_ = client.account,
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-    nonce,
-    actions
-  } = parameters
+  const { account: account_ = client.account } = parameters
 
   if (!account_) {
     throw new AccountNotFoundError({
-      docsPath: "/nexus/nexus-client/methods#sendtransaction"
+      docsPath: "/nexus-client/methods#sendtransaction"
     })
   }
-
-  const account = parseAccount(account_) as NexusAccount
 
   return await getAction(
     client,
     sendUserOperation,
     "sendUserOperation"
-  )({
-    calls: actions.map((action) => ({
-      to: action.target,
-      value: BigInt(action.value.toString()),
-      data: action.callData
-    })),
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-    nonce,
-    account
-  })
+    // @ts-ignore
+  )({ ...parameters, account: account_ })
 }

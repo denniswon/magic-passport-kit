@@ -6,10 +6,11 @@ import {
 } from "viem"
 import { getK1ValidatorAddress } from "../../constants"
 import { sanitizeSignature } from "../utils/Helpers"
-import type { Module, ModuleMeta } from "../utils/Types"
-import { type ToModuleParameters, toModule } from "../utils/toModule"
-export type ToK1ValidatorParameters = ToModuleParameters & {
-  address?: Hex
+import type { Module, ModuleMeta, ModuleParameters } from "../utils/Types"
+import { toModule } from "../utils/toModule"
+
+export type ToK1ValidatorParameters = Omit<ModuleParameters, "address"> & {
+  address?: ModuleParameters["address"]
 }
 
 export type K1ModuleGetInitDataArgs = {

@@ -1,28 +1,5 @@
-import {
-  getAddOwnableExecutorOwnerAction,
-  getExecuteOnOwnedAccountAction,
-  getOwnableValidatorSignature
-} from "@rhinestone/module-sdk"
-import {
-  http,
-  type Account,
-  type Address,
-  type Chain,
-  type Hex,
-  type LocalAccount,
-  type PublicClient,
-  type WalletClient,
-  encodeAbiParameters,
-  encodeFunctionData,
-  encodePacked,
-  getAddress,
-  parseAbi,
-  toHex,
-  zeroAddress
-} from "viem"
-import { waitForTransactionReceipt } from "viem/actions"
+import { http, type Chain, type LocalAccount } from "viem"
 import { afterAll, beforeAll, describe, expect, test } from "vitest"
-import { testAddresses } from "../../../test/callDatas"
 import { toNetwork } from "../../../test/testSetup"
 import {
   fundAndDeployClients,
@@ -31,16 +8,8 @@ import {
   toTestClient
 } from "../../../test/testUtils"
 import type { MasterClient, NetworkConfig } from "../../../test/testUtils"
-import type { NexusAccount } from "../../account"
-import {
-  type NexusClient,
-  createNexusClient
-} from "../../clients/createNexusClient"
-import { parseModuleTypeId } from "../../clients/decorators/erc7579/supportsModule"
-import { k1ValidatorAddress } from "../../constants"
-import { toK1Validator } from "../k1Validator/toK1Validator"
-import type { Module } from "../utils/Types"
-import { type OwnableActions, ownableActions } from "./decorators"
+import { createNexusClient } from "../../clients/createNexusClient"
+import { ownableActions } from "./decorators"
 import { toOwnableValidator } from "./toOwnableValidator"
 
 describe("modules.ownableValidator.dx", async () => {
@@ -123,9 +92,7 @@ describe("modules.ownableValidator.dx", async () => {
     const ownableNexusClient = nexusClient.extend(ownableActions(ownableModule))
 
     // Wait for the module installation transaction to be mined and check its success
-    const { success } = await ownableNexusClient.waitForUserOperationReceipt({
-      hash
-    })
+    await ownableNexusClient.waitForUserOperationReceipt({ hash })
 
     // Prepare a user operation to withdraw 1 wei to userTwo
     // This demonstrates a simple transaction that requires multi-sig approval
