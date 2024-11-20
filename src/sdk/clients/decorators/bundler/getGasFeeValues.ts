@@ -68,8 +68,8 @@ export const getGasFeeValues = async (
 ): Promise<GetGasFeeValuesReturnType> => {
   const gasPrice = await client.request({
     method: getIsTestMode()
-      ? "biconomy_getGasFeeValues"
-      : "pimlico_getUserOperationGasPrice",
+      ? "pimlico_getUserOperationGasPrice"
+      : "biconomy_getGasFeeValues",
     params: []
   })
 

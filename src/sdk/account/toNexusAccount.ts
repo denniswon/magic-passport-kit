@@ -53,8 +53,8 @@ import {
 
 import {
   ENTRY_POINT_ADDRESS,
-  k1ValidatorAddress as k1ValidatorAddress_,
-  k1ValidatorFactoryAddress
+  getK1ValidatorAddress,
+  getK1ValidatorFactoryAddress
 } from "../constants"
 import { toK1Validator } from "../modules/k1Validator/toK1Validator"
 import type { Module } from "../modules/utils/Types"
@@ -159,8 +159,8 @@ export const toNexusAccount = async (
     signer: _signer,
     index = 0n,
     module: module_,
-    factoryAddress = k1ValidatorFactoryAddress,
-    k1ValidatorAddress = k1ValidatorAddress_,
+    factoryAddress = getK1ValidatorFactoryAddress(),
+    k1ValidatorAddress = getK1ValidatorAddress(),
     key = "nexus account",
     name = "Nexus Account"
   } = parameters

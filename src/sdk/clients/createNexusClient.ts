@@ -20,8 +20,8 @@ import type {
 import { type NexusAccount, toNexusAccount } from "../account/toNexusAccount"
 import type { UnknownSigner } from "../account/utils/toSigner"
 import {
-  k1ValidatorAddress as k1ValidatorAddress_,
-  k1ValidatorFactoryAddress
+  getK1ValidatorAddress,
+  getK1ValidatorFactoryAddress
 } from "../constants"
 import type { Module } from "../modules/utils/Types"
 import { createBicoBundlerClient } from "./createBicoBundlerClient"
@@ -170,6 +170,10 @@ let _isTesting = false
 export async function createNexusClient(
   parameters: NexusClientConfig
 ): Promise<NexusClient> {
+  if (parameters.isTest) {
+    _isTesting = true
+  }
+
   const {
     client: client_,
     chain = parameters.chain ?? client_?.chain,
@@ -178,8 +182,8 @@ export async function createNexusClient(
     key = "nexus client",
     name = "Nexus Client",
     module,
-    factoryAddress = k1ValidatorFactoryAddress,
-    k1ValidatorAddress = k1ValidatorAddress_,
+    factoryAddress = getK1ValidatorFactoryAddress(),
+    k1ValidatorAddress = getK1ValidatorAddress(),
     bundlerTransport,
     transport,
     accountAddress,
@@ -209,9 +213,6 @@ export async function createNexusClient(
   })
     .extend(erc7579Actions())
     .extend(smartAccountActions())
-  if (parameters.isTest) {
-    _isTesting = true
-  }
   return bundler_ as unknown as NexusClient
 }
 
