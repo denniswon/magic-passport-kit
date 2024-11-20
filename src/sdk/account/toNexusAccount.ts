@@ -44,8 +44,8 @@ import {
 
 import {
   ENTRY_POINT_ADDRESS,
-  k1ValidatorAddress as k1ValidatorAddress_,
-  k1ValidatorFactoryAddress
+  getK1ValidatorAddress,
+  getK1ValidatorFactoryAddress
 } from "../constants"
 // Constants
 import { EntrypointAbi } from "../constants/abi"
@@ -162,8 +162,8 @@ export const toNexusAccount = async (
     signer: _signer,
     index = 0n,
     module: module_,
-    factoryAddress = k1ValidatorFactoryAddress,
-    k1ValidatorAddress = k1ValidatorAddress_,
+    factoryAddress = getK1ValidatorFactoryAddress(),
+    k1ValidatorAddress = getK1ValidatorAddress(),
     key = "nexus account",
     name = "Nexus Account"
   } = parameters

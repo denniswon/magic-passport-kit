@@ -1,5 +1,5 @@
 import type { Account, Chain, Client, Hex, Transport } from "viem"
-import { isTesting } from "../../../account/utils/Utils"
+import { getIsTestMode } from "../../createNexusClient"
 
 export type BicoRpcSchema = [
   {
@@ -67,7 +67,7 @@ export const getGasFeeValues = async (
   >
 ): Promise<GetGasFeeValuesReturnType> => {
   const gasPrice = await client.request({
-    method: isTesting
+    method: getIsTestMode()
       ? "pimlico_getUserOperationGasPrice"
       : "biconomy_getGasFeeValues",
     params: []

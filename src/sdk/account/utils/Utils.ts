@@ -357,7 +357,6 @@ export const getAccountDomainStructFields = async (
   ])
 }
 export const playgroundTrue = process?.env?.RUN_PLAYGROUND === "true"
-export const isTesting = process?.env?.TEST === "true"
 
 /**
  * Safely multiplies a bigint by a number, rounding appropriately.

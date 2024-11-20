@@ -1,5 +1,5 @@
 import type { Hex } from "viem"
-import { isTesting } from "../account"
+import { getIsTestMode } from "../clients/createNexusClient"
 
 export * from "./abi"
 export {
@@ -36,12 +36,20 @@ export const MAINNET_ADDRESS_K1_VALIDATOR_FACTORY_ADDRESS: Hex =
 export const MAINNET_ADDRESS_K1_VALIDATOR_ADDRESS: Hex =
   "0x00000004171351c442B202678c48D8AB5B321E8f"
 
-export const nexusImplementationAddress: Hex = isTesting
+export function getNexusImplementationAddress() {
+  return getIsTestMode()
   ? TEST_ADDRESS_NEXUS_IMPLEMENTATION_ADDRESS
   : MAINNET_ADDRESS_NEXUS_IMPLEMENTATION_ADDRESS
-export const k1ValidatorFactoryAddress: Hex = isTesting
-  ? TEST_ADDRESS_K1_VALIDATOR_FACTORY_ADDRESS
-  : MAINNET_ADDRESS_K1_VALIDATOR_FACTORY_ADDRESS
-export const k1ValidatorAddress: Hex = isTesting
+}
+
+export function getK1ValidatorAddress() {
+  return getIsTestMode()
   ? TEST_ADDRESS_K1_VALIDATOR_ADDRESS
   : MAINNET_ADDRESS_K1_VALIDATOR_ADDRESS
+}
+
+export function getK1ValidatorFactoryAddress() {
+  return getIsTestMode()
+  ? TEST_ADDRESS_K1_VALIDATOR_FACTORY_ADDRESS
+  : MAINNET_ADDRESS_K1_VALIDATOR_FACTORY_ADDRESS
+}
