@@ -12,10 +12,7 @@ import {
   toTestClient
 } from "../../test/testUtils"
 import type { MasterClient, NetworkConfig } from "../../test/testUtils"
-import {
-  SIMPLE_SESSION_VALIDATOR_ADDRESS,
-  SMART_SESSIONS_ADDRESS
-} from "../constants"
+import { SMART_SESSIONS_ADDRESS } from "../constants"
 import { isPermissionEnabled } from "../modules/smartSessionsValidator/Helpers"
 import type { CreateSessionDataParams } from "../modules/smartSessionsValidator/Types"
 import {
@@ -130,6 +127,8 @@ describe("nexus.session.client", async () => {
       }
     ]
 
+    nexusClient.account.getCounterFactualAddress()
+
     const createSessionsResponse = await nexusSessionClient.grantPermission({
       sessionRequestedInfo
     })
@@ -171,7 +170,7 @@ describe("nexus.session.client", async () => {
       account: smartSessionNexusClient.account,
       signer: sessionKeyAccount,
       moduleData: {
-        permissionId: cachedPermissionId
+        permissionIds: [cachedPermissionId]
       }
     })
 
@@ -180,11 +179,10 @@ describe("nexus.session.client", async () => {
     )
 
     const userOpHash = await useSmartSessionNexusClient.usePermission({
-      actions: [
+      calls: [
         {
-          target: testAddresses.Counter,
-          value: 0n,
-          callData: encodeFunctionData({
+          to: testAddresses.Counter,
+          data: encodeFunctionData({
             abi: CounterAbi,
             functionName: "incrementNumber",
             args: []
@@ -215,7 +213,7 @@ describe("nexus.session.client", async () => {
       account: nexusClient.account,
       signer: sessionKeyAccount,
       moduleData: {
-        permissionId: cachedPermissionId
+        permissionIds: [cachedPermissionId]
       }
     })
 
@@ -249,11 +247,10 @@ describe("nexus.session.client", async () => {
 
     expect(
       useSmartSessionNexusClient.usePermission({
-        actions: [
+        calls: [
           {
-            target: testAddresses.Counter,
-            value: 0n,
-            callData: encodeFunctionData({
+            to: testAddresses.Counter,
+            data: encodeFunctionData({
               abi: CounterAbi,
               functionName: "decrementNumber"
             })

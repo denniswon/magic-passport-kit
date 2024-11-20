@@ -7,16 +7,14 @@ import { type Address, type Hex, encodePacked } from "viem"
 import type { ModuleMeta } from "../../modules/utils/Types"
 import type { ModularSmartAccount } from "../utils/Types"
 import type { Module, ModuleParameters } from "../utils/Types"
-import { type ToModuleParameters, toModule } from "../utils/toModule"
+import { toModule } from "../utils/toModule"
 import type { UsePermissionModuleData } from "./Types"
 
 const DUMMY_ECDSA_SIG =
   "0xe8b94748580ca0b4993c9a1b86b5be851bfc076ff5ce3a1ff65bf16392acfcb800f9b4f1aef1555c7fce5599fffb17e7c635502154a0333ba21f3ae491839af51c"
 
-/**
- * Represents the implementation parameters for a Smart Session module.
- */
-export type SmartSessionImplementation = ModuleParameters & {
+export type SmartSessionModule = Module & {
+  sigGen: (signature: Hex) => Hex
   moduleData?: UsePermissionModuleData
 }
 
@@ -31,8 +29,8 @@ export type UsePermissionModuleGetInitDataArgs = {
  * Parameters for creating a Use Session module.
  */
 export type UsePermissionModuleParameters = Omit<
-  ToModuleParameters,
-  "accountAddress"
+  ModuleParameters,
+  "accountAddress" | "address"
 > & {
   account: ModularSmartAccount
   moduleData?: UsePermissionModuleData
@@ -92,7 +90,7 @@ export const getUsePermissionInitData = ({
  */
 export const toSmartSessionsValidator = (
   parameters: UsePermissionModuleParameters
-): Module => {
+): SmartSessionModule => {
   const {
     account,
     signer,
@@ -102,9 +100,11 @@ export const toSmartSessionsValidator = (
     moduleInitArgs: moduleInitArgs_ = { signerAddress: signer.address },
     initArgs: initArgs_ = { signerAddress: signer.address },
     moduleData: {
-      permissionId = "0x",
+      permissionIdIndex = 0,
+      permissionIds = [],
       mode = SmartSessionMode.USE,
-      enableSessionData
+      enableSessionData,
+      keyGenData: _
     } = {}
   } = parameters
 
@@ -113,6 +113,7 @@ export const toSmartSessionsValidator = (
     moduleInitData_ ?? getUsePermissionModuleInitData(moduleInitArgs_)
 
   return toModule({
+    ...parameters,
     signer,
     accountAddress: account.address,
     address: SMART_SESSIONS_ADDRESS,
@@ -122,18 +123,28 @@ export const toSmartSessionsValidator = (
     getStubSignature: async () =>
       encodeSmartSessionSignature({
         mode,
-        permissionId,
+        permissionId: permissionIds[permissionIdIndex],
         enableSessionData,
         signature: DUMMY_ECDSA_SIG
       }),
     signUserOpHash: async (userOpHash: Hex) =>
       encodeSmartSessionSignature({
         mode,
-        permissionId,
+        permissionId: permissionIds[permissionIdIndex],
         enableSessionData,
         signature: await signer.signMessage({
           message: { raw: userOpHash as Hex }
         })
-      })
-  })
+      }),
+    extend: {
+      sigGen: (signature: Hex): Hex => {
+        return encodeSmartSessionSignature({
+          mode,
+          permissionId: permissionIds[permissionIdIndex],
+          enableSessionData,
+          signature
+        })
+      }
+    }
+  }) as SmartSessionModule
 }

@@ -14,7 +14,6 @@ import {
   encodePacked,
   hexToBytes,
   keccak256,
-  pad,
   parseAbi,
   parseAbiParameters,
   publicActions,
@@ -30,96 +29,62 @@ import {
   NEXUS_DOMAIN_VERSION
 } from "../../account/utils/Constants"
 import { EIP1271Abi } from "../../constants/abi"
-import { type ModuleType, moduleTypeIds } from "../../modules/utils/Types"
-import type {
-  AccountMetadata,
-  EIP712DomainReturn,
-  UserOperationStruct
-} from "./Types"
+import {
+  type AnyData,
+  type ModuleType,
+  moduleTypeIds
+} from "../../modules/utils/Types"
+import type { AccountMetadata, EIP712DomainReturn } from "./Types"
 
 /**
- * pack the userOperation
- * @param op
- * @param forSignature "true" if the hash is needed to calculate the getUserOpHash()
- *  "false" to pack entire UserOp, for calculating the calldata cost of putting it on-chain.
+ * Type guard to check if a value is null or undefined.
+ *
+ * @param value - The value to check
+ * @returns True if the value is null or undefined
  */
-export function packUserOp(
-  userOperation: Partial<UserOperationStruct>
-): string {
-  const hashedInitCode = keccak256(
-    userOperation.factory && userOperation.factoryData
-      ? concat([userOperation.factory, userOperation.factoryData])
-      : "0x"
-  )
-  const hashedCallData = keccak256(userOperation.callData ?? "0x")
-  const hashedPaymasterAndData = keccak256(
-    userOperation.paymaster
-      ? concat([
-          userOperation.paymaster,
-          pad(toHex(userOperation.paymasterVerificationGasLimit || BigInt(0)), {
-            size: 16
-          }),
-          pad(toHex(userOperation.paymasterPostOpGasLimit || BigInt(0)), {
-            size: 16
-          }),
-          userOperation.paymasterData || "0x"
-        ])
-      : "0x"
-  )
-
-  return encodeAbiParameters(
-    [
-      { type: "address" },
-      { type: "uint256" },
-      { type: "bytes32" },
-      { type: "bytes32" },
-      { type: "bytes32" },
-      { type: "uint256" },
-      { type: "bytes32" },
-      { type: "bytes32" }
-    ],
-    [
-      userOperation.sender as Address,
-      userOperation.nonce ?? 0n,
-      hashedInitCode,
-      hashedCallData,
-      concat([
-        pad(toHex(userOperation.verificationGasLimit ?? 0n), {
-          size: 16
-        }),
-        pad(toHex(userOperation.callGasLimit ?? 0n), { size: 16 })
-      ]),
-      userOperation.preVerificationGas ?? 0n,
-      concat([
-        pad(toHex(userOperation.maxPriorityFeePerGas ?? 0n), {
-          size: 16
-        }),
-        pad(toHex(userOperation.maxFeePerGas ?? 0n), { size: 16 })
-      ]),
-      hashedPaymasterAndData
-    ]
-  )
-}
-
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export const isNullOrUndefined = (value: any): value is undefined => {
   return value === null || value === undefined
 }
 
+/**
+ * Validates if a string is a valid RPC URL.
+ *
+ * @param url - The URL to validate
+ * @returns True if the URL is a valid RPC endpoint
+ */
 export const isValidRpcUrl = (url: string): boolean => {
   const regex = /^(http:\/\/|wss:\/\/|https:\/\/).*/
   return regex.test(url)
 }
 
+/**
+ * Compares two addresses for equality, case-insensitive.
+ *
+ * @param a - First address
+ * @param b - Second address
+ * @returns True if addresses are equal
+ */
 export const addressEquals = (a?: string, b?: string): boolean =>
   !!a && !!b && a?.toLowerCase() === b.toLowerCase()
 
+/**
+ * Parameters for wrapping a signature according to EIP-6492.
+ */
 export type SignWith6492Params = {
+  /** The factory contract address */
   factoryAddress: Address
+  /** The factory initialization calldata */
   factoryCalldata: Hex
+  /** The original signature to wrap */
   signature: Hash
 }
 
+/**
+ * Wraps a signature according to EIP-6492 specification.
+ *
+ * @param params - Parameters including factory address, calldata, and signature
+ * @returns The wrapped signature
+ */
 export const wrapSignatureWith6492 = ({
   factoryAddress,
   factoryCalldata,
@@ -142,10 +107,24 @@ export const wrapSignatureWith6492 = ({
   ])
 }
 
+/**
+ * Calculates the percentage of a partial value relative to a total value.
+ *
+ * @param partialValue - The partial value
+ * @param totalValue - The total value
+ * @returns The percentage as a number
+ */
 export function percentage(partialValue: number, totalValue: number) {
   return (100 * partialValue) / totalValue
 }
 
+/**
+ * Converts a percentage to a factor (e.g., 50% -> 1.5).
+ *
+ * @param percentage - The percentage value (1-100)
+ * @returns The converted factor
+ * @throws If percentage is outside valid range
+ */
 export function convertToFactor(percentage: number | undefined): number {
   // Check if the input is within the valid range
   if (percentage) {
@@ -161,6 +140,15 @@ export function convertToFactor(percentage: number | undefined): number {
   return 1
 }
 
+/**
+ * Generates installation data and hash for module installation.
+ *
+ * @param accountOwner - The account owner address
+ * @param modules - Array of modules with their types and configurations
+ * @param domainName - Optional domain name
+ * @param domainVersion - Optional domain version
+ * @returns Tuple of [installData, hash]
+ */
 export function makeInstallDataAndHash(
   accountOwner: Address,
   modules: { type: ModuleType; config: Hex }[],
@@ -247,6 +235,14 @@ export function getTypesForEIP712Domain({
     domain?.salt && { name: "salt", type: "bytes32" }
   ].filter(Boolean) as TypedDataParameter[]
 }
+
+/**
+ * Retrieves account metadata including name, version, and chain ID.
+ *
+ * @param client - The viem Client instance
+ * @param accountAddress - The account address to query
+ * @returns Promise resolving to account metadata
+ */
 export const getAccountMeta = async (
   client: Client,
   accountAddress: Address
@@ -288,6 +284,13 @@ export const getAccountMeta = async (
   }
 }
 
+/**
+ * Wraps a typed data hash with EIP-712 domain separator.
+ *
+ * @param typedHash - The hash to wrap
+ * @param appDomainSeparator - The domain separator
+ * @returns The wrapped hash
+ */
 export const eip712WrapHash = (typedHash: Hex, appDomainSeparator: Hex): Hex =>
   keccak256(concat(["0x1901", appDomainSeparator, typedHash]))
 
@@ -305,7 +308,7 @@ export function typeToString(typeDef: TypedDataWith712): string[] {
 }
 
 /** @ignore */
-export function bigIntReplacer(_key: string, value: any): any {
+export function bigIntReplacer(_key: string, value: AnyData) {
   return typeof value === "bigint" ? value.toString() : value
 }
 
@@ -356,5 +359,12 @@ export const getAccountDomainStructFields = async (
 export const playgroundTrue = process?.env?.RUN_PLAYGROUND === "true"
 export const isTesting = process?.env?.TEST === "true"
 
+/**
+ * Safely multiplies a bigint by a number, rounding appropriately.
+ *
+ * @param bI - The bigint to multiply
+ * @param multiplier - The multiplication factor
+ * @returns The multiplied bigint
+ */
 export const safeMultiplier = (bI: bigint, multiplier: number): bigint =>
   BigInt(Math.round(Number(bI) * multiplier))
